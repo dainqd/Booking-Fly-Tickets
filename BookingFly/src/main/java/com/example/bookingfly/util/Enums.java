@@ -21,4 +21,8 @@ public class Enums {
         ACTIVE, DELETED, INACTIVE
     }
 
+    public static enum FlightStatus {
+        ACTIVE, DELETED, INACTIVE
+    }
+
 }

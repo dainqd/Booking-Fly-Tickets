@@ -104,7 +104,7 @@ public class AdminUserApi {
             existUser.setRoles(user.getRoles());
         } else {
             ResponseEntity.badRequest();
-            new RuntimeException("Error: keyword not true");
+            throw new RuntimeException("Error: keyword not true");
         }
         return ResponseEntity.ok(userDetailsServiceimpl.save(existUser));
     }

@@ -23,12 +23,22 @@ public class AirlineApi {
     final AirlineService airlineService;
     final MessageResourceService messageResourceService;
 
-    @GetMapping("")
-    public Page<AirlineDto> getList(
-            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+    @GetMapping("list")
+    public Page<AirlineDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                    @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         return airlineService.findAllByStatus(Enums.AirlineStatus.ACTIVE, pageable).map(AirlineDto::new);
+    }
+
+    @GetMapping("list-area")
+    public Page<AirlineDto> getListByArea(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                          @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+                                          @RequestParam(value = "area", required = false, defaultValue = "0") Enums.AirlineArea area) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        if (area == null) {
+            return airlineService.findAllByStatusAndArea(Enums.AirlineStatus.ACTIVE, Enums.AirlineArea.INLAND, pageable).map(AirlineDto::new);
+        }
+        return airlineService.findAllByStatusAndArea(Enums.AirlineStatus.ACTIVE, area, pageable).map(AirlineDto::new);
     }
 
     @GetMapping("{id}")

@@ -2,6 +2,7 @@ package com.example.bookingfly.util;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.text.*;
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -136,6 +138,19 @@ public class Utils {
         String monthCuoi = Utils.theMonth(intMonth - 1);
         String s = dayCuoi + ", " + monthCuoi + ", " + parts[2];
         return s;
+    }
+
+    public static String getUsername() {
+        String adminName = SecurityContextHolder.getContext().getAuthentication().getName();
+        Pattern pattern = Pattern.compile("username=([^,\\s]+)");
+        Matcher matcher = pattern.matcher(adminName);
+        String username;
+        if (matcher.find()) {
+            username = matcher.group(1);
+        } else {
+            username = "admin";
+        }
+        return username;
     }
 
     private static final NavigableMap<Long, String> suffixes = new TreeMap<>();

@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 public class AirlineDto {
     private long id;
     private String name;
+    private Enums.AirlineArea area = Enums.AirlineArea.INLAND;
     private Enums.AirlineStatus status = Enums.AirlineStatus.ACTIVE;
 
     public AirlineDto(Airlines airlines) {

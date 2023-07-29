@@ -52,13 +52,12 @@ public class AirlineService {
             if (!optionalAirlines.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         messageResourceService.getMessage("airlines.not.found"));
-            } else {
-                Airlines airlines = optionalAirlines.get();
-                BeanUtils.copyProperties(airlineDto, airlines);
-                airlines.setUpdatedAt(LocalDateTime.now());
-                airlines.setUpdatedBy(adminID);
-                return airlineRepository.save(airlines);
             }
+            Airlines airlines = optionalAirlines.get();
+            BeanUtils.copyProperties(airlineDto, airlines);
+            airlines.setUpdatedAt(LocalDateTime.now());
+            airlines.setUpdatedBy(adminID);
+            return airlineRepository.save(airlines);
         } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     messageResourceService.getMessage("update.error"));
@@ -80,6 +79,14 @@ public class AirlineService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     messageResourceService.getMessage("delete.error"));
         }
+    }
+
+    public Page<Airlines> findAllByArea(Enums.AirlineArea area, Pageable pageable) {
+        return airlineRepository.findAllByArea(area, pageable);
+    }
+
+    public Page<Airlines> findAllByStatusAndArea(Enums.AirlineStatus status, Enums.AirlineArea area, Pageable pageable) {
+        return airlineRepository.findAllByStatusAndArea(status, area, pageable);
     }
 
     public Page<Airlines> findAllByStatus(Enums.AirlineStatus status, Pageable pageable) {

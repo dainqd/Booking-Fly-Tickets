@@ -23,8 +23,9 @@ public class Airlines extends BasicEntity {
     @NotNull(message = "Airline name is not null")
     private String name;
     @Enumerated(EnumType.STRING)
+    private Enums.AirlineArea area = Enums.AirlineArea.INLAND;
+    @Enumerated(EnumType.STRING)
     private Enums.AirlineStatus status = Enums.AirlineStatus.ACTIVE;
-
     public Airlines(AirlineDto airlineDto) {
         BeanUtils.copyProperties(airlineDto, this);
     }

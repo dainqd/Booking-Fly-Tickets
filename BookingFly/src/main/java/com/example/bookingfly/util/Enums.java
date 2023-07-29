@@ -13,4 +13,8 @@ public class Enums {
         ACTIVE, DELETED, INACTIVE
     }
 
+    public static enum AirlineArea {
+        INLAND, INTERNATIONAL
+    }
+
 }

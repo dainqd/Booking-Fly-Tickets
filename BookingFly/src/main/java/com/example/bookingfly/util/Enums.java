@@ -17,4 +17,8 @@ public class Enums {
         INLAND, INTERNATIONAL
     }
 
+    public static enum AirportStatus {
+        ACTIVE, DELETED, INACTIVE
+    }
+
 }

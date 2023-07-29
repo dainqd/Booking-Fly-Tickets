@@ -1,9 +1,9 @@
 package com.example.bookingfly.restapi.admin;
 
-import com.example.bookingfly.dto.AirlineDto;
-import com.example.bookingfly.entity.Airlines;
+import com.example.bookingfly.dto.AirportDto;
+import com.example.bookingfly.entity.Airports;
 import com.example.bookingfly.entity.User;
-import com.example.bookingfly.service.AirlineService;
+import com.example.bookingfly.service.AirportService;
 import com.example.bookingfly.service.MessageResourceService;
 import com.example.bookingfly.service.UserDetailsServiceImpl;
 import com.example.bookingfly.util.Enums;
@@ -21,55 +21,44 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/admin/api/airlines/")
+@RequestMapping("/admin/api/airports/")
 @RequiredArgsConstructor
-public class AdminAirlineApi {
-    final AirlineService airlineService;
+public class AdminAirportApi {
+    final AirportService airportService;
     final MessageResourceService messageResourceService;
     final UserDetailsServiceImpl userDetailsService;
 
     @GetMapping("")
-    public Page<AirlineDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+    public Page<AirportDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
                                     @RequestParam(value = "size", required = false, defaultValue = "10") int size,
-                                    @RequestParam(value = "status", required = false, defaultValue = "") Enums.AirlineStatus status) {
+                                    @RequestParam(value = "status", required = false, defaultValue = "") Enums.AirportStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         if (status != null) {
-            return airlineService.findAllByStatus(status, pageable).map(AirlineDto::new);
+            return airportService.findAllByStatus(status, pageable).map(AirportDto::new);
         }
-        return airlineService.findAll(pageable).map(AirlineDto::new);
-    }
-
-    @GetMapping("list-area")
-    public Page<AirlineDto> getListByArea(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                          @RequestParam(value = "size", required = false, defaultValue = "10") int size,
-                                          @RequestParam(value = "area", required = false, defaultValue = "0") Enums.AirlineArea area) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        if (area == null) {
-            return airlineService.findAll(pageable).map(AirlineDto::new);
-        }
-        return airlineService.findAllByArea(area, pageable).map(AirlineDto::new);
+        return airportService.findAll(pageable).map(AirportDto::new);
     }
 
     @GetMapping("{id}/{status}")
-    public AirlineDto getDetail(@PathVariable(name = "id") Long id, @PathVariable(name = "status") Enums.AirlineStatus status) {
+    public AirportDto getDetail(@PathVariable(name = "id") Long id, @PathVariable(name = "status") Enums.AirportStatus status) {
         if (status != null) {
-            Optional<Airlines> optionalAirlines = airlineService.findByIdAndStatus(id, status);
-            if (!optionalAirlines.isPresent()) {
+            Optional<Airports> optionalAirports = airportService.findByIdAndStatus(id, status);
+            if (!optionalAirports.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        messageResourceService.getMessage("airlines.not.found"));
+                        messageResourceService.getMessage("airports.not.found"));
             }
-            return new AirlineDto(optionalAirlines.get());
+            return new AirportDto(optionalAirports.get());
         }
-        Optional<Airlines> optionalAirlines = airlineService.findById(id);
-        if (!optionalAirlines.isPresent()) {
+        Optional<Airports> optionalAirports = airportService.findById(id);
+        if (!optionalAirports.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    messageResourceService.getMessage("airlines.not.found"));
+                    messageResourceService.getMessage("airports.not.found"));
         }
-        return new AirlineDto(optionalAirlines.get());
+        return new AirportDto(optionalAirports.get());
     }
 
     @PostMapping("")
-    public AirlineDto create(@RequestBody AirlineDto airlineDto) {
+    public AirportDto create(@RequestBody AirportDto airportDto) {
         String username = Utils.getUsername();
         Optional<User> optionalUser = userDetailsService.findByUsername(username);
         if (!optionalUser.isPresent()) {
@@ -77,11 +66,11 @@ public class AdminAirlineApi {
                     messageResourceService.getMessage("id.not.found"));
         }
         User user = optionalUser.get();
-        return new AirlineDto(airlineService.create(airlineDto, user.getId()));
+        return new AirportDto(airportService.create(airportDto, user.getId()));
     }
 
     @PutMapping("")
-    public String update(@RequestBody AirlineDto request) {
+    public String update(@RequestBody AirportDto request) {
         String username = Utils.getUsername();
         Optional<User> optionalUser = userDetailsService.findByUsername(username);
         if (!optionalUser.isPresent()) {
@@ -89,7 +78,7 @@ public class AdminAirlineApi {
                     messageResourceService.getMessage("id.not.found"));
         }
         User user = optionalUser.get();
-        airlineService.update(request, user.getId());
+        airportService.update(request, user.getId());
         return messageResourceService.getMessage("update.success");
     }
 
@@ -103,7 +92,7 @@ public class AdminAirlineApi {
                     messageResourceService.getMessage("id.not.found"));
         }
         User user = optionalUser.get();
-        airlineService.deleteById(id, user.getId());
+        airportService.deleteById(id, user.getId());
         return new ResponseEntity<>(messageResourceService.getMessage("delete.success"), HttpStatus.OK);
     }
 }

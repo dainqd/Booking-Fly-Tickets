@@ -15,10 +15,11 @@ import javax.persistence.*;
 @Table(name = "location")
 public class Location {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String place = "";
     private String ward = "";
     private String district = "";
     private String city = "";
-    private String country = "Viet Nam";
+    private String country = "";
 }

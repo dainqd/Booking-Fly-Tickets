@@ -1,5 +1,6 @@
 package com.example.bookingfly.util;
 
+import com.example.bookingfly.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -141,16 +141,16 @@ public class Utils {
     }
 
     public static String getUsername() {
-        String adminName = SecurityContextHolder.getContext().getAuthentication().getName();
-        Pattern pattern = Pattern.compile("username=([^,\\s]+)");
-        Matcher matcher = pattern.matcher(adminName);
-        String username;
-        if (matcher.find()) {
-            username = matcher.group(1);
-        } else {
-            username = "admin";
-        }
-        return username;
+        User adminName = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        Pattern pattern = Pattern.compile("username=([^,\\s]+)");
+//        Matcher matcher = pattern.matcher(adminName);
+//        String username;
+//        if (matcher.find()) {
+//            username = matcher.group(1);
+//        } else {
+//            username = "admin";
+//        }
+        return adminName.getUsername();
     }
 
     private static final NavigableMap<Long, String> suffixes = new TreeMap<>();
@@ -172,14 +172,5 @@ public class Utils {
         long truncated = value / (divideBy / 10);
         boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
         return hasDecimal ? (truncated / 10d) + suffix : (truncated / 10) + suffix;
-    }
-
-    public static void main(String args[]) {
-        int[] numbers = {0, 5, 999, 1000, 5821, 10500, 101800, 2000000, 7800000, 92150000, 123200000, 999999 + 1};
-        for (int i = 0; i < numbers.length; i++) {
-            long n = numbers[i];
-            String formatted = formatIntToViews(n);
-            System.out.println(n + " => " + formatted);
-        }
     }
 }

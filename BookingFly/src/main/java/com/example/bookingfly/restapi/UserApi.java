@@ -1,41 +1,46 @@
 package com.example.bookingfly.restapi;
 
+import com.example.bookingfly.dto.UserDto;
 import com.example.bookingfly.entity.User;
-import com.example.bookingfly.repository.RoleRepository;
+import com.example.bookingfly.service.MessageResourceService;
 import com.example.bookingfly.service.UserDetailsServiceImpl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.bookingfly.service.UserService;
+import com.example.bookingfly.util.Enums;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
 public class UserApi {
-    @Autowired
-    UserDetailsServiceImpl userDetailsServiceimpl;
+    final UserDetailsServiceImpl userDetailsServiceimpl;
+    final MessageResourceService messageResourceService;
+    final UserService userService;
 
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @GetMapping()
-    public ResponseEntity<List<User>> getList() {
-        return ResponseEntity.ok(userDetailsServiceimpl.findAll());
+    @GetMapping("")
+    public Page<UserDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                 @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return userService.findAllByStatus(Enums.AccountStatus.ACTIVE, pageable).map(UserDto::new);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getDetail(@PathVariable Long id) {
-        Optional<User> optionalUser = userDetailsServiceimpl.findById(id);
+    @GetMapping("{id}")
+    public UserDto getDetail(@PathVariable(name = "id") Long id) {
+        Optional<User> optionalUser;
+        optionalUser = userService.findByIdAndStatus(id, Enums.AccountStatus.ACTIVE);
         if (!optionalUser.isPresent()) {
-            ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    messageResourceService.getMessage("account.not.found"));
         }
-        return ResponseEntity.ok(optionalUser.get());
+        return new UserDto(optionalUser.get());
     }
 }

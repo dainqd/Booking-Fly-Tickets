@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +35,7 @@ public class UserDetailsIpmpl implements UserDetails {
 
     private String phoneNumber;
 
-    private Date birthday;
+    private LocalDateTime birthday;
 
     private String gender;
 
@@ -48,7 +49,7 @@ public class UserDetailsIpmpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsIpmpl(long id, String avt, String firstname, String lastName, String username, String email,
-                            String phoneNumber, Date birthday, String gender, String address, String password,
+                            String phoneNumber, LocalDateTime birthday, String gender, String address, String password,
                             Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.avt = avt;

@@ -173,7 +173,7 @@ public class AuthController {
     public String registerVerify(
             @Valid @ModelAttribute SignupRequest signupRequest, BindingResult result, Model model,
             HttpServletRequest request, HttpServletResponse response) {
-        Optional<User> optionalUser = userDetailsService.findByVerifyCode(signupRequest.getVerifyCode());
+        Optional<User> optionalUser = userDetailsService.findByUsername(signupRequest.getUsername());
         model.addAttribute("isSuccess", true);
         model.addAttribute("isVerify", false);
         if (signupRequest.getVerifyCode().isEmpty()) {

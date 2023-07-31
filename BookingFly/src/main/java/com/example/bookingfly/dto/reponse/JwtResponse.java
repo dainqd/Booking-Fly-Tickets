@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -24,13 +25,13 @@ public class JwtResponse extends BasicEntity {
     private String username;
     private String email;
     private String phoneNumber;
-    private Date birthday;
+    private LocalDateTime birthday;
     private String gender;
     private String address;
     private List<String> roles;
 
     public JwtResponse(String message, String accessToken, Long id, String avt, String firstName, String lastName, String username, String email,
-                       String phoneNumber, Date birthday, String gender, String address, List<String> roles) {
+                       String phoneNumber, LocalDateTime birthday, String gender, String address, List<String> roles) {
         this.message = message;
         this.token = accessToken;
         this.id = id;

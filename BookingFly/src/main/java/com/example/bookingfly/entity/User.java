@@ -1,13 +1,16 @@
 package com.example.bookingfly.entity;
 
+import com.example.bookingfly.dto.UserDto;
 import com.example.bookingfly.entity.basic.BasicEntity;
 import com.example.bookingfly.util.Enums;
 import lombok.*;
+import org.springframework.beans.BeanUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +33,7 @@ public class User extends BasicEntity {
     @Email(message = "Incorrect email format!, Please re-enter")
     private String email;
     private String phoneNumber;
-    private Date birthday;
+    private LocalDateTime birthday;
     private String gender;
     private String address;
     private String verifyCode = "";
@@ -44,9 +47,8 @@ public class User extends BasicEntity {
     private Set<Role> roles = new HashSet<>();
     @Enumerated(EnumType.STRING)
     private Enums.AccountStatus status;
-    public User(String username, String email,String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
+
+    public User(UserDto userDto) {
+        BeanUtils.copyProperties(userDto, this);
     }
 }

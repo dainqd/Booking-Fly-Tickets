@@ -1,120 +1,96 @@
 package com.example.bookingfly.restapi.admin;
 
+import com.example.bookingfly.dto.UserDto;
 import com.example.bookingfly.entity.User;
 import com.example.bookingfly.repository.RoleRepository;
 import com.example.bookingfly.service.MessageResourceService;
 import com.example.bookingfly.service.UserDetailsServiceImpl;
+import com.example.bookingfly.service.UserService;
+import com.example.bookingfly.util.Enums;
+import com.example.bookingfly.util.Utils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("admin/api/user")
 public class AdminUserApi {
-    @Autowired
-    UserDetailsServiceImpl userDetailsServiceimpl;
-
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
-    RoleRepository roleRepository;
-
+    final UserService userService;
+    final UserDetailsServiceImpl userDetailsService;
+    final RoleRepository roleRepository;
     final MessageResourceService messageResourceService;
 
-    @GetMapping()
-    public ResponseEntity<List<User>> getList() {
-        return ResponseEntity.ok(userDetailsServiceimpl.findAll());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getDetail(@PathVariable Long id) {
-        Optional<User> optionalUser = userDetailsServiceimpl.findById(id);
-        if (!optionalUser.isPresent()) {
-            ResponseEntity.badRequest().build();
+    @GetMapping("")
+    public Page<UserDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                 @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+                                 @RequestParam(value = "status", required = false, defaultValue = "") Enums.AccountStatus status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        if (status != null) {
+            return userService.findAllByStatus(status, pageable).map(UserDto::new);
         }
-        return ResponseEntity.ok(optionalUser.get());
+        return userService.findAll(pageable).map(UserDto::new);
     }
 
-    @PostMapping()
-    public ResponseEntity<User> create(@RequestBody User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        return ResponseEntity.ok(userDetailsServiceimpl.save(user));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User user) {
-        Optional<User> optionalUser = userDetailsServiceimpl.findById(id);
-        if ((!optionalUser.isPresent())) {
-            ResponseEntity.badRequest().build();
-        }
-        User existUser = optionalUser.get();
-
-        existUser.setAvt(user.getAvt());
-        existUser.setFirstName(user.getFirstName());
-        existUser.setLastName(user.getLastName());
-        existUser.setUsername(user.getUsername());
-        existUser.setEmail(user.getEmail());
-        existUser.setPhoneNumber(user.getPhoneNumber());
-        existUser.setBirthday(user.getBirthday());
-        existUser.setGender(user.getGender());
-        existUser.setAddress(user.getAddress());
-        existUser.setPassword(encoder.encode(user.getPassword()));
-        existUser.setRoles(user.getRoles());
-        return ResponseEntity.ok(userDetailsServiceimpl.save(existUser));
-    }
-
-    @PutMapping("/{id}/{keyword}")
-    public ResponseEntity<User> updated(@PathVariable Long id, @PathVariable String keyword, @RequestBody User user) {
-        Optional<User> optionalUser = userDetailsServiceimpl.findById(id);
-        if ((!optionalUser.isPresent())) {
-            ResponseEntity.badRequest().build();
-        }
-        User existUser = optionalUser.get();
-
-        if (keyword.equals("avt")) {
-            existUser.setAvt(user.getAvt());
-        } else if (keyword.equals("firstName")) {
-            existUser.setFirstName(user.getFirstName());
-        } else if (keyword.equals("lastName")) {
-            existUser.setLastName(user.getLastName());
-        } else if (keyword.equals("username")) {
-            existUser.setUsername(user.getUsername());
-        } else if (keyword.equals("email")) {
-            existUser.setEmail(user.getEmail());
-        } else if (keyword.equals("phoneNumber")) {
-            existUser.setPhoneNumber(user.getPhoneNumber());
-        } else if (keyword.equals("birthday")) {
-            existUser.setBirthday(user.getBirthday());
-        } else if (keyword.equals("gender")) {
-            existUser.setGender(user.getGender());
-        } else if (keyword.equals("address")) {
-            existUser.setAddress(user.getAddress());
-        } else if (keyword.equals("password")) {
-            existUser.setPassword(encoder.encode(user.getPassword()));
-        } else if (keyword.equals("roles")) {
-            existUser.setRoles(user.getRoles());
+    @GetMapping("{id}/{status}")
+    public UserDto getDetail(@PathVariable(name = "id") Long id, @PathVariable(name = "status") Enums.AccountStatus status) {
+        Optional<User> optionalUser;
+        if (status != null) {
+            optionalUser = userService.findByIdAndStatus(id, status);
         } else {
-            ResponseEntity.badRequest();
-            throw new RuntimeException("Error: keyword not true");
+            optionalUser = userService.findById(id);
         }
-        return ResponseEntity.ok(userDetailsServiceimpl.save(existUser));
+        if (!optionalUser.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    messageResourceService.getMessage("account.not.found"));
+        }
+        return new UserDto(optionalUser.get());
+    }
+
+    @PostMapping("")
+    public UserDto create(@RequestBody UserDto userDto) {
+        String username = Utils.getUsername();
+        Optional<User> optionalUser = userDetailsService.findByUsername(username);
+        if (!optionalUser.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    messageResourceService.getMessage("id.not.found"));
+        }
+        User user = optionalUser.get();
+        return new UserDto(userService.create(userDto, user.getId()));
+    }
+
+    @PutMapping("")
+    public String update(@RequestBody UserDto request) {
+        String username = Utils.getUsername();
+        Optional<User> optionalUser = userDetailsService.findByUsername(username);
+        if (!optionalUser.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    messageResourceService.getMessage("id.not.found"));
+        }
+        User user = optionalUser.get();
+        userService.update(request, user.getId());
+        return messageResourceService.getMessage("update.success");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        if ((!userDetailsServiceimpl.findById(id).isPresent())) {
-            ResponseEntity.badRequest().build();
+    public ResponseEntity<String> delete(@PathVariable("id") long id) {
+        String username = Utils.getUsername();
+        System.out.println(username);
+        Optional<User> optionalUser = userDetailsService.findByUsername(username);
+        if (!optionalUser.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    messageResourceService.getMessage("id.not.found"));
         }
-        userDetailsServiceimpl.deleteById(id);
+        User user = optionalUser.get();
+        userService.deleteById(id, user.getId());
         return new ResponseEntity<>(messageResourceService.getMessage("delete.success"), HttpStatus.OK);
     }
 }

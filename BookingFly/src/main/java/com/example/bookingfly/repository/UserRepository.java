@@ -1,6 +1,10 @@
 package com.example.bookingfly.repository;
 
+import com.example.bookingfly.entity.Airports;
 import com.example.bookingfly.entity.User;
+import com.example.bookingfly.util.Enums;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -31,5 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByVerifyCode(String verifyCode);
+    Page<User> findAll(Pageable pageable);
+
+    Page<User> findAllByStatus(Enums.AccountStatus status, Pageable pageable);
+
+    Optional<User> findById(Long id);
+
+    Optional<User> findByIdAndStatus(Long id, Enums.AccountStatus status);
+
+    Optional<User> findByUsernameAndStatus(String username, Enums.AccountStatus status);
 }

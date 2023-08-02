@@ -29,4 +29,11 @@ public class Enums {
         COMPLETED, EXPIRED, PROCESSING, CANCELED, DELETED
     }
 
+    public static enum Gender {
+        MALE, FEMALE, OTHER
+    }
+
+    public static enum PassengerStatus {
+        ACTIVE, DELETED, INACTIVE
+    }
 }

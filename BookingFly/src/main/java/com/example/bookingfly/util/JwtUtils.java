@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * Helper class to handle jwt token
- * */
+ */
 @Component
 public class JwtUtils {
     public static String jwtSecret = "bezKoderSecretKey";
@@ -30,7 +30,8 @@ public class JwtUtils {
     public static final String FIRST_NAME_CLAIM_KEY = "firstName";
     public static final String LAST_NAME_CLAIM_KEY = "lastName";
 
-    public JwtUtils() {}
+    public JwtUtils() {
+    }
 
     public JwtUtils(String secretKey) {
         jwtSecret = secretKey;
@@ -72,7 +73,7 @@ public class JwtUtils {
 
     /**
      * Tạo token cho người dùng ở Divega nhưng kèm thông tin token xịn ở Account Metaworld
-     * */
+     */
     public String generateToken(User user, String issuer, String accessToken, int expireAfter) {
         List<String> list = new ArrayList<>();
         user.getRoles().forEach(role -> list.add(role.getName().name()));

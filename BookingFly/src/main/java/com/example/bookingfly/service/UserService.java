@@ -95,4 +95,8 @@ public class UserService {
     public Optional<User> findByIdAndStatus(long id, Enums.AccountStatus status) {
         return userRepository.findByIdAndStatus(id, status);
     }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 }

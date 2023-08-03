@@ -1,6 +1,6 @@
 package com.example.bookingfly.restapi;
 
-import com.example.bookingfly.entity.UploadImageRequest;
+import com.example.bookingfly.dto.request.UploadImageRequest;
 import com.example.bookingfly.service.CloudflareService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

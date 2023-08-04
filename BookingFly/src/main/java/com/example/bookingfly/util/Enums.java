@@ -36,4 +36,8 @@ public class Enums {
     public static enum PassengerStatus {
         ACTIVE, DELETED, INACTIVE
     }
+
+    public static enum ReviewStatus {
+        ACTIVE, DELETED, INACTIVE, BLOCKED
+    }
 }

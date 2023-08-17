@@ -5,6 +5,7 @@ import com.example.bookingfly.dto.NotificationDto;
 import com.example.bookingfly.entity.*;
 import com.example.bookingfly.repository.BookingRepository;
 import com.example.bookingfly.util.Enums;
+import com.example.bookingfly.util.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -38,7 +39,7 @@ public class BookingService {
     }
 
     public Booking create(BookingDto bookingDto, long adminId) {
-        try {
+//        try {
             Booking booking = new Booking();
 
             BeanUtils.copyProperties(bookingDto, booking);
@@ -50,15 +51,15 @@ public class BookingService {
             NotificationDto notificationDto = new NotificationDto();
             notificationDto.setTitle("Book Flight Success!");
             notificationDto.setContent("Book Flight Success, Please check books list!!!");
-            notificationDto.setUser(bookingDto.getUser());
+
+            notificationDto.setUser(booking.getUser());
             notificationService.create(notificationDto, adminId);
 
             return bookingRepository.save(booking);
-        } catch (Exception exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    messageResourceService.getMessage("create.error"));
-
-        }
+//        } catch (Exception exception) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    messageResourceService.getMessage("create.error"));
+//        }
     }
 
     public Booking update(BookingDto bookingDto, long adminID) {
@@ -81,7 +82,7 @@ public class BookingService {
     }
 
     public void deleteById(long id, long adminID) {
-        try {
+//        try {
             Optional<Booking> airports = bookingRepository.findById(id);
             if (!airports.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -91,10 +92,10 @@ public class BookingService {
             airports.get().setDeletedAt(LocalDateTime.now());
             airports.get().setDeletedBy(adminID);
             bookingRepository.save(airports.get());
-        } catch (Exception exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    messageResourceService.getMessage("cancel.error"));
-        }
+//        } catch (Exception exception) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    messageResourceService.getMessage("delete.error"));
+//        }
     }
 
     public void cancelBooking(long id) {
@@ -129,9 +130,10 @@ public class BookingService {
     }
 
     private void getAttributeBooking(Booking booking, BookingDto bookingDto) {
-        Optional<User> optionalUser = userDetailsService.findById(bookingDto.getUser().getId());
+        String username = Utils.getUsername();
+        Optional<User> optionalUser = userDetailsService.findByUsername(username);
         if (!optionalUser.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     messageResourceService.getMessage("account.not.found"));
         }
 

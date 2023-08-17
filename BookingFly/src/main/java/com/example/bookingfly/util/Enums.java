@@ -40,4 +40,12 @@ public class Enums {
     public static enum ReviewStatus {
         ACTIVE, DELETED, INACTIVE, BLOCKED
     }
+
+    public static enum PaymentMethod {
+        IMMEDIATE, CARDCREDIT, ELECTRONICWALLET
+    }
+
+    public static enum PaymentStatus {
+        PAID, UNPAID, DELETED
+    }
 }

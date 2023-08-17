@@ -1,10 +1,10 @@
 package com.example.bookingfly.restapi;
 
-import com.example.bookingfly.dto.ReviewDto;
-import com.example.bookingfly.entity.Reviews;
+import com.example.bookingfly.dto.PaymentDto;
+import com.example.bookingfly.entity.Payments;
 import com.example.bookingfly.entity.User;
 import com.example.bookingfly.service.MessageResourceService;
-import com.example.bookingfly.service.ReviewService;
+import com.example.bookingfly.service.PaymentService;
 import com.example.bookingfly.service.UserService;
 import com.example.bookingfly.util.Enums;
 import com.example.bookingfly.util.Utils;
@@ -14,40 +14,38 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/reviews/")
+@RequestMapping("/api/payments/")
 @RequiredArgsConstructor
-public class ReviewApi {
-    final ReviewService reviewService;
+public class PaymentApi {
+    final PaymentService paymentService;
     final MessageResourceService messageResourceService;
     final UserService userService;
 
-
     @GetMapping("list")
-    public Page<ReviewDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                   @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+    public Page<PaymentDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                    @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return reviewService.findAllByStatus(Enums.ReviewStatus.ACTIVE, pageable).map(ReviewDto::new);
+        return paymentService.findAllByStatus(Enums.PaymentStatus.PAID, pageable).map(PaymentDto::new);
     }
 
     @GetMapping("{id}")
-    public ReviewDto getDetail(@PathVariable("id") Long id) {
-        Optional<Reviews> optionalAirports = reviewService.findByIdAndStatus(id, Enums.ReviewStatus.ACTIVE);
-        if (!optionalAirports.isPresent()) {
+    public PaymentDto getDetail(@PathVariable("id") Long id) {
+        Optional<Payments> optionalPayments = paymentService.findByIdAndStatus(id, Enums.PaymentStatus.PAID);
+        if (!optionalPayments.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    messageResourceService.getMessage("airports.not.found"));
+                    messageResourceService.getMessage("payment.not.found"));
         }
-        return new ReviewDto(optionalAirports.get());
+        return new PaymentDto(optionalPayments.get());
     }
 
     @PostMapping("create")
-    public ReviewDto create(@RequestBody ReviewDto reviewDto) {
+    public PaymentDto create(@RequestBody PaymentDto paymentDto) {
         String username = Utils.getUsername();
         Optional<User> optionalUser = userService.findByUsername(username);
         if (!optionalUser.isPresent()) {
@@ -55,6 +53,6 @@ public class ReviewApi {
                     messageResourceService.getMessage("account.not.found"));
         }
         User user = optionalUser.get();
-        return new ReviewDto(reviewService.create(reviewDto, user.getId()));
+        return new PaymentDto(paymentService.create(paymentDto, user.getId()));
     }
 }

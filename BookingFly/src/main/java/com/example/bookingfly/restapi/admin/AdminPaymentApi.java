@@ -1,11 +1,10 @@
 package com.example.bookingfly.restapi.admin;
 
-import com.example.bookingfly.dto.FlightDto;
-import com.example.bookingfly.dto.ReviewDto;
-import com.example.bookingfly.entity.Reviews;
+import com.example.bookingfly.dto.PaymentDto;
+import com.example.bookingfly.entity.Payments;
 import com.example.bookingfly.entity.User;
 import com.example.bookingfly.service.MessageResourceService;
-import com.example.bookingfly.service.ReviewService;
+import com.example.bookingfly.service.PaymentService;
 import com.example.bookingfly.service.UserService;
 import com.example.bookingfly.util.Enums;
 import com.example.bookingfly.util.Utils;
@@ -22,41 +21,41 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/admin/api/reviews/")
+@RequestMapping("/admin/api/payments/")
 @RequiredArgsConstructor
-public class AdminReviewApi {
-    final ReviewService reviewService;
+public class AdminPaymentApi {
+    final PaymentService paymentService;
     final MessageResourceService messageResourceService;
     final UserService userService;
 
     @GetMapping("")
-    public Page<ReviewDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                   @RequestParam(value = "size", required = false, defaultValue = "10") int size,
-                                   @RequestParam(value = "status", required = false, defaultValue = "") Enums.ReviewStatus status) {
+    public Page<PaymentDto> getList(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                    @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+                                    @RequestParam(value = "status", required = false, defaultValue = "") Enums.PaymentStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         if (status != null) {
-            return reviewService.findAllByStatus(status, pageable).map(ReviewDto::new);
+            return paymentService.findAllByStatus(status, pageable).map(PaymentDto::new);
         }
-        return reviewService.findAll(pageable).map(ReviewDto::new);
+        return paymentService.findAll(pageable).map(PaymentDto::new);
     }
 
     @GetMapping("{id}/{status}")
-    public ReviewDto getDetail(@PathVariable(name = "id") Long id, @PathVariable(name = "status") Enums.ReviewStatus status) {
-        Optional<Reviews> optionalReviews;
+    public PaymentDto getDetail(@PathVariable(name = "id") Long id, @PathVariable(name = "status") Enums.PaymentStatus status) {
+        Optional<Payments> optionalPayments;
         if (status != null) {
-            optionalReviews = reviewService.findByIdAndStatus(id, status);
+            optionalPayments = paymentService.findByIdAndStatus(id, status);
         } else {
-            optionalReviews = reviewService.findById(id);
+            optionalPayments = paymentService.findById(id);
         }
-        if (!optionalReviews.isPresent()) {
+        if (!optionalPayments.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    messageResourceService.getMessage("reviews.not.found"));
+                    messageResourceService.getMessage("payment.not.found"));
         }
-        return new ReviewDto(optionalReviews.get());
+        return new PaymentDto(optionalPayments.get());
     }
 
     @PutMapping("/{id}/{status}")
-    public ResponseEntity<String> toggle(@PathVariable("id") long id, @PathVariable("status") Enums.ReviewStatus status) {
+    public ResponseEntity<String> toggle(@PathVariable("id") long id, @PathVariable("status") Enums.PaymentStatus status) {
         String username = Utils.getUsername();
         Optional<User> optionalUser = userService.findByUsername(username);
         if (!optionalUser.isPresent()) {
@@ -64,7 +63,7 @@ public class AdminReviewApi {
                     messageResourceService.getMessage("id.not.found"));
         }
         User user = optionalUser.get();
-        reviewService.toggle(id, status, user.getId());
+        paymentService.changeStatus(id, status, user.getId());
         return new ResponseEntity<>(messageResourceService.getMessage("update.success"), HttpStatus.OK);
     }
 
@@ -78,7 +77,7 @@ public class AdminReviewApi {
                     messageResourceService.getMessage("id.not.found"));
         }
         User user = optionalUser.get();
-        reviewService.deleteById(id, user.getId());
+        paymentService.deleteById(id, user.getId());
         return new ResponseEntity<>(messageResourceService.getMessage("delete.success"), HttpStatus.OK);
     }
 }

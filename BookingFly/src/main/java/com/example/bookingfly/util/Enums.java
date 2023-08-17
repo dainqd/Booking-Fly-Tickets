@@ -48,4 +48,8 @@ public class Enums {
     public static enum PaymentStatus {
         PAID, UNPAID, DELETED
     }
+
+    public static enum NotificationStatus {
+        SEEN, UNSEEN, DELETED
+    }
 }

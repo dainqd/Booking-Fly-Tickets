@@ -103,8 +103,6 @@ public class ReviewService {
             } else {
                 reviews.get().setStatus(status);
             }
-            reviews.get().setDeletedAt(LocalDateTime.now());
-            reviews.get().setDeletedBy(adminID);
             reviewRepository.save(reviews.get());
         } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

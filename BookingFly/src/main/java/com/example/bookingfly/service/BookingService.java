@@ -1,6 +1,7 @@
 package com.example.bookingfly.service;
 
 import com.example.bookingfly.dto.BookingDto;
+import com.example.bookingfly.dto.NotificationDto;
 import com.example.bookingfly.entity.*;
 import com.example.bookingfly.repository.BookingRepository;
 import com.example.bookingfly.util.Enums;
@@ -22,6 +23,7 @@ public class BookingService {
     final MessageResourceService messageResourceService;
     final UserDetailsServiceImpl userDetailsService;
     final FlightService flightService;
+    final NotificationService notificationService;
 
     public Page<Booking> findAll(Pageable pageable) {
         return bookingRepository.findAll(pageable);
@@ -44,6 +46,12 @@ public class BookingService {
             booking.setCreatedBy(adminId);
 
             getAttributeBooking(booking, bookingDto);
+
+            NotificationDto notificationDto = new NotificationDto();
+            notificationDto.setTitle("Book Flight Success!");
+            notificationDto.setContent("Book Flight Success, Please check books list!!!");
+            notificationDto.setUser(bookingDto.getUser());
+            notificationService.create(notificationDto, adminId);
 
             return bookingRepository.save(booking);
         } catch (Exception exception) {

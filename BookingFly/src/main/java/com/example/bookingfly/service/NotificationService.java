@@ -37,7 +37,7 @@ public class NotificationService {
     }
 
     public Notifications create(NotificationDto notificationDto, long adminId) {
-        try {
+//        try {
             Notifications notifications = new Notifications();
 
             BeanUtils.copyProperties(notificationDto, notifications);
@@ -47,11 +47,10 @@ public class NotificationService {
             getAttributeNotifications(notifications, notificationDto);
 
             return notificationRepository.save(notifications);
-        } catch (Exception exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    messageResourceService.getMessage("create.error"));
-
-        }
+//        } catch (Exception exception) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    messageResourceService.getMessage("create.error"));
+//        }
     }
 
     public void deleteById(long id, long adminID) {

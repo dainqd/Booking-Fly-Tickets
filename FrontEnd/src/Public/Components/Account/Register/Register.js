@@ -49,7 +49,7 @@ function Register() {
                                             account</p>
                                     </div>
 
-                                    <Form cclassName="signin-form" onFinish={onFinish}>
+                                    <Form className="signin-form" onFinish={onFinish}>
                                         <div className="col-12">
                                             <label htmlFor="yourEmail" className="form-label">Your Email</label>
                                             <Form.Item

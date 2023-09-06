@@ -2,8 +2,8 @@ import { BASE_URL_SERVER } from "../config/server";
 import axios from "axios";
 
 const API_ENDPOINT = {
-    LIST_ACCOUNT: "/api/v1/user",
-    DETAIL_ACCOUNT: "/api/v1/user/",
+    LIST_ACCOUNT: "/admin/api/user/",
+    DETAIL_ACCOUNT: "/admin/api/user/",
 }
 class AccountService {
     listAccount = () => {

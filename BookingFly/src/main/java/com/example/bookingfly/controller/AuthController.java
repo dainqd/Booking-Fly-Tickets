@@ -121,7 +121,7 @@ public class AuthController {
                             , loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtUtils.generateToken(account);
+            String jwt = jwtUtils.generateJwtToken(authentication);
             userDetailsService.saveAccessCookie(response, jwt);
             Cookie username = new Cookie("username", loginRequest.getUsername());
             response.addCookie(username);

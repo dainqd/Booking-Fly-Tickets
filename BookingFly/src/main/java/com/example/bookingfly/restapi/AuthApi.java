@@ -76,7 +76,7 @@ public class AuthApi {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String jwt = jwtUtils.generateToken(account);
+            String jwt = jwtUtils.generateJwtToken(authentication);
 
             UserDetailsIpmpl userDetails = (UserDetailsIpmpl) authentication.getPrincipal();
             List<String> roles = userDetails.getAuthorities().stream()

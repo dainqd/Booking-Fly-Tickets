@@ -1,17 +1,19 @@
 package com.example.bookingfly.config;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.bookingfly.contant.ApplicationConstant;
-import com.example.bookingfly.entity.User;
 import com.example.bookingfly.service.UserDetailsServiceImpl;
 import com.example.bookingfly.util.JwtUtils;
-import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
@@ -44,48 +46,27 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthTokenFilter extends OncePerRequestFilter {
+    final JwtUtils jwtUtils;
+    final UserDetailsServiceImpl userDetailsIpmpl;
 
-    final UserDetailsServiceImpl accountService;
+    public static final Logger logger = LoggerFactory.getLogger(com.example.bookingfly.config.AuthTokenFilter.class);
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        String token = this.getToken(request);
-        if (token == null) {
-            Cookie cookie = new Cookie("app.base.cookie_name", null);
-            cookie.setPath(ApplicationConstant.HOME_PATH);
-            response.addCookie(cookie);
-            SecurityContextHolder.clearContext();
-            filterChain.doFilter(request, response);
-            return;
-        }
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         try {
-            DecodedJWT decodedJWT = JwtUtils.getInstance(JwtUtils.jwtSecret).getVerifier().verify(token);
-            Optional<User> optionalUser = accountService.findByEmail(decodedJWT.getClaim(JwtUtils.EMAIL_CLAIM_KEY).asString());
-            if (optionalUser.isPresent()) {
-                User user = optionalUser.get();
-                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                user.getRoles().forEach(role -> {
-                    authorities.add(new SimpleGrantedAuthority(role.getName().name()));
-                });
-                //check kyc
-                SecurityContextHolder.getContext()
-                        .setAuthentication(new UsernamePasswordAuthenticationToken(user, null, authorities));
-                session.setAttribute(ApplicationConstant.CURRENT_LOGGED_IN_KEY, user);
-            } else {
-                Cookie cookie = new Cookie("app.base.cookie_name", null);
-                cookie.setPath(ApplicationConstant.HOME_PATH);
-                response.addCookie(cookie);
+            String jwt = parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)){
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+
+                UserDetails userDetails = userDetailsIpmpl.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (Exception e) {
-//            Cookie cookie = new Cookie(app.base.cookie_name, null);
-//            cookie.setPath(ApplicationConstant.HOME_PATH);
-//            response.addCookie(cookie);
-//            SecurityContextHolder.clearContext();
+        }catch (Exception e){
+            logger.error("Cannot set user authentication: {}", e);
         }
         filterChain.doFilter(request, response);
     }
@@ -110,6 +91,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
         if (WebUtils.getCookie(request, "app.base.cookie_name") != null) {
             return Objects.requireNonNull(WebUtils.getCookie(request, "app.base.cookie_name")).getValue();
+        }
+        return null;
+    }
+
+    private String parseJwt(HttpServletRequest request){
+        String headerAuth = request.getHeader("Authorization");
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")){
+            return headerAuth.substring(7, headerAuth.length());
         }
         return null;
     }

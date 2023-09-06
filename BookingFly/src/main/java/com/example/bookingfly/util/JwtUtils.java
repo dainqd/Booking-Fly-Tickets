@@ -1,90 +1,123 @@
 package com.example.bookingfly.util;
 
+import com.example.bookingfly.service.UserDetailsIpmpl;
+import com.example.bookingfly.entity.User;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.example.bookingfly.entity.User;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-/**
- * Helper class to handle jwt token
- */
+@Slf4j
 @Component
 public class JwtUtils {
     public static String jwtSecret = "bezKoderSecretKey";
     public int jwtExpirationsMs = 86422222;
-
-    public String issuer = "issure";
-    // some time units constant
+    // lớp này dùng để ký (là hoạt động mã hóa tạo ra chữ ký) và xác nhận (verify) token
+    public static Algorithm algorithm;
+    // giữ phương thức xác minh đúng định dạng  JWT và đúng chữ ký
+    private static JWTVerifier verifier;
+    public static String JWT_SECRET_KEY = "secret-changed";
     public static final int ONE_SECOND = 1000;
     public static final int ONE_MINUTE = ONE_SECOND * 60;
     public static final int ONE_HOUR = ONE_MINUTE * 60;
     public static final int ONE_DAY = ONE_HOUR * 24;
-    public static final String ROLES_CLAIM_KEY = "roles";
-    public static final String EMAIL_CLAIM_KEY = "email";
-    public static final String FIRST_NAME_CLAIM_KEY = "firstName";
-    public static final String LAST_NAME_CLAIM_KEY = "lastName";
+    public static final String ROLE_CLAIM_KEY = "role";
+    private static final String DEFAULT_ISSUER = "T2009M1";
 
-    public JwtUtils() {
+    public static Algorithm getAlgorithm() {
+        if (algorithm == null) {
+            algorithm = Algorithm.HMAC256(JWT_SECRET_KEY.getBytes());
+        }
+        return algorithm;
     }
 
-    public JwtUtils(String secretKey) {
-        jwtSecret = secretKey;
+    static int time = ONE_DAY * 3;
+
+    public static JWTVerifier getVerifier() {
+        if (verifier == null) {
+            verifier = JWT.require(getAlgorithm()).build();
+        }
+        return verifier;
     }
 
-    public static JwtUtils getInstance() {
-        return new JwtUtils();
+    public static DecodedJWT getDecodedJwt(String token) {
+        DecodedJWT decodedJWT = getVerifier().verify(token);
+        return decodedJWT;
     }
 
-    public static JwtUtils getInstance(String secretKey) {
-        return new JwtUtils(secretKey);
-    }
-
-    public Algorithm getAlgorithm() {
-        return Algorithm.HMAC256(jwtSecret.getBytes());
-    }
-
-    public JWTVerifier getVerifier() {
-        return JWT.require(getAlgorithm()).build();
-    }
-
-    public void getDecodedJwt(String token) {
-        getVerifier().verify(token);
-    }
-
-    public String generateToken(User user) {
-        List<String> list = new ArrayList<>();
-        user.getRoles().forEach(role -> list.add(role.getName().name()));
+    public static String generateToken(String subject, String role, String issuer, int expireAfter) {
+        if (role == null || role.length() == 0) {
+            return JWT.create()
+                    .withSubject(subject)
+                    .withExpiresAt(new Date(System.currentTimeMillis() + expireAfter))
+                    .withIssuer(issuer)
+                    .sign(getAlgorithm());
+        }
         return JWT.create()
-                .withSubject(String.valueOf(user.getId()))
-                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationsMs))
+                .withSubject(subject)
+                .withExpiresAt(new Date(System.currentTimeMillis() + time))
                 .withIssuer(issuer)
-                .withClaim(JwtUtils.ROLES_CLAIM_KEY, list)
-                .withClaim(JwtUtils.EMAIL_CLAIM_KEY, user.getEmail())
-                .withClaim(JwtUtils.FIRST_NAME_CLAIM_KEY, user.getFirstName())
-                .withClaim(JwtUtils.LAST_NAME_CLAIM_KEY, user.getLastName())
+                .withClaim(JwtUtils.ROLE_CLAIM_KEY, role) //get first role in Authorities
                 .sign(getAlgorithm());
     }
 
-    /**
-     * Tạo token cho người dùng ở Divega nhưng kèm thông tin token xịn ở Account Metaworld
-     */
-    public String generateToken(User user, String issuer, String accessToken, int expireAfter) {
-        List<String> list = new ArrayList<>();
-        user.getRoles().forEach(role -> list.add(role.getName().name()));
+    public static String generateTokenByAccount(User accounts, int expireAfter) {
         return JWT.create()
-                .withSubject(String.valueOf(user.getId()))
-                .withExpiresAt(new Date(System.currentTimeMillis() + expireAfter))
-                .withIssuer(issuer)
-                .withClaim(JwtUtils.ROLES_CLAIM_KEY, list)
-                .withClaim(JwtUtils.EMAIL_CLAIM_KEY, user.getEmail())
-                .withClaim(JwtUtils.FIRST_NAME_CLAIM_KEY, user.getFirstName())
-                .withClaim(JwtUtils.LAST_NAME_CLAIM_KEY, user.getLastName())
+                .withSubject(String.valueOf(accounts.getId()))
+                .withSubject(String.valueOf(accounts.getUsername()))
+                .withExpiresAt(new Date(System.currentTimeMillis() + time))
+                .withIssuer(DEFAULT_ISSUER)
+                .withClaim("username", accounts.getUsername())
                 .sign(getAlgorithm());
+    }
+
+    public String generateJwtToken(Authentication authentication){
+        UserDetailsIpmpl userPrincipal = (UserDetailsIpmpl) authentication.getPrincipal();
+
+        return Jwts.builder()
+                .setSubject(userPrincipal.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationsMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+    }
+
+    public String getUserNameFromJwtToken(String token){
+        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public boolean validateJwtToken(String authToken){
+        try {
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            return true;
+        }catch (SignatureException e){
+            log.error("Invalid JWT signature: {}", e.getMessage());
+        }catch (MalformedJwtException e){
+            log.error("Invalid JWT token: {}", e.getMessage());
+        }catch (ExpiredJwtException e){
+            log.error("JWT token is expire: {}", e.getMessage());
+        }catch (UnsupportedJwtException e){
+            log.error("JWT token is unsupported: {}", e.getMessage());
+        }catch (IllegalArgumentException e){
+            log.error("JWT claim string is empty: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search) {
+        for (T each : enumeration.getEnumConstants()) {
+            if (each.name().compareToIgnoreCase(search) == 0) {
+                return each;
+            }
+        }
+        return null;
     }
 }
